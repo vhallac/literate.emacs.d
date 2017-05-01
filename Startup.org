@@ -757,7 +757,9 @@
 
    #+BEGIN_SRC emacs-lisp
      (use-package auto-complete
-       :ensure t)
+       :ensure t
+       :config
+       (setq-default ac-sources (push 'ac-source-yasnippet ac-sources)))
    #+END_SRC
 ** TODO Yasnippet
    #+BEGIN_SRC emacs-lisp
