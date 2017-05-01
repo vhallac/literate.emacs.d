@@ -1285,7 +1285,9 @@ into real text."
   :ensure org-plus-contrib
   :bind (("C-c b o"   . org-switchb)
          ("C-c b 4 o" . org-switch-to-buffer-other-window)
-         ("C-c l"     . org-store-link))
+         ("C-c l"     . org-store-link)
+         :map org-mode-map
+         ("RET" . scimax/org-return))
   :defer
   :config
   (setq org-enforce-todo-checkbox-dependencies t
@@ -1355,7 +1357,59 @@ into real text."
   (unbind-key "C-c C-x C-s" org-mode-map)
   (add-to-list 'org-modules 'org-habit)
   (flyspell-mode 1)
-  (auto-fill-mode t))
+  (auto-fill-mode t)
+  (require 'org-inlinetask)
+  
+  (defun scimax/org-return (&optional ignore)
+    "Add new list item, heading or table row with RET.
+  A double return on an empty element deletes it.
+  Use a prefix arg to get regular RET. "
+    (interactive "P")
+    (if ignore
+        (org-return)
+      (cond
+       ;; Open links like usual
+       ((eq 'link (car (org-element-context)))
+        (org-open-at-point-global))
+       ;; It doesn't make sense to add headings in inline tasks. Thanks Anders
+       ;; Johansson!
+       ((org-inlinetask-in-task-p)
+        (org-return))
+       ;; add checkboxes
+       ((org-at-item-checkbox-p)
+        (org-insert-todo-heading nil))
+       ;; lists end with two blank lines, so we need to make sure we are also not
+       ;; at the beginning of a line to avoid a loop where a new entry gets
+       ;; created with only one blank line.
+       ((and (org-in-item-p) (not (bolp)))
+        (if (org-element-property :contents-begin (org-element-context))
+            (org-insert-heading)
+          (beginning-of-line)
+          (setf (buffer-substring
+                 (line-beginning-position) (line-end-position)) "")
+          (org-return)))
+       ((org-at-heading-p)
+        (if (not (string= "" (org-element-property :title (org-element-context))))
+            (progn (org-end-of-meta-data)
+                   (org-insert-heading))
+          (beginning-of-line)
+          (setf (buffer-substring
+                 (line-beginning-position) (line-end-position)) "")))
+       ((org-at-table-p)
+        (if (-any?
+             (lambda (x) (not (string= "" x)))
+             (nth
+              (- (org-table-current-dline) 1)
+              (org-table-to-lisp)))
+            (org-return)
+          ;; empty row
+          (beginning-of-line)
+          (setf (buffer-substring
+                 (line-beginning-position) (line-end-position)) "")
+          (org-return)))
+       (t
+        (org-return)))))
+  )
 
 (use-package org-agenda
   :after org
@@ -1601,6 +1655,58 @@ into real text."
 (use-package org-mobile
   :commands (org-mobile-push org-mobile-pull)
   :config (setq org-mobile-directory "~/outgoing/mobileorg"))
+
+(require 'org-inlinetask)
+
+(defun scimax/org-return (&optional ignore)
+  "Add new list item, heading or table row with RET.
+A double return on an empty element deletes it.
+Use a prefix arg to get regular RET. "
+  (interactive "P")
+  (if ignore
+      (org-return)
+    (cond
+     ;; Open links like usual
+     ((eq 'link (car (org-element-context)))
+      (org-open-at-point-global))
+     ;; It doesn't make sense to add headings in inline tasks. Thanks Anders
+     ;; Johansson!
+     ((org-inlinetask-in-task-p)
+      (org-return))
+     ;; add checkboxes
+     ((org-at-item-checkbox-p)
+      (org-insert-todo-heading nil))
+     ;; lists end with two blank lines, so we need to make sure we are also not
+     ;; at the beginning of a line to avoid a loop where a new entry gets
+     ;; created with only one blank line.
+     ((and (org-in-item-p) (not (bolp)))
+      (if (org-element-property :contents-begin (org-element-context))
+          (org-insert-heading)
+        (beginning-of-line)
+        (setf (buffer-substring
+               (line-beginning-position) (line-end-position)) "")
+        (org-return)))
+     ((org-at-heading-p)
+      (if (not (string= "" (org-element-property :title (org-element-context))))
+          (progn (org-end-of-meta-data)
+                 (org-insert-heading))
+        (beginning-of-line)
+        (setf (buffer-substring
+               (line-beginning-position) (line-end-position)) "")))
+     ((org-at-table-p)
+      (if (-any?
+           (lambda (x) (not (string= "" x)))
+           (nth
+            (- (org-table-current-dline) 1)
+            (org-table-to-lisp)))
+          (org-return)
+        ;; empty row
+        (beginning-of-line)
+        (setf (buffer-substring
+               (line-beginning-position) (line-end-position)) "")
+        (org-return)))
+     (t
+      (org-return)))))
 
 (use-package quantified
   :disabled
