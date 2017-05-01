@@ -713,6 +713,58 @@ into real text."
   :config
   (counsel-projectile-on))
 
+(use-package mvn
+  :ensure t
+  :bind (:map java-mode-map
+              ("C-c t c" . mvn-test-class)
+              ("C-c t f" . mvn-test-defun))
+  :init
+  ;; Neither clutter nor color from mvn, please
+  (defun vh/mvn--plain-output (old-function task args &rest future-args)
+    (apply old-function task (concat "-q -B " args) future-args))
+
+  (advice-add #'mvn :around #'vh/mvn--plain-output)
+
+  :config
+  (defun mvn-test-class ()
+    (interactive)
+    (let* ((file-name (buffer-file-name))
+           (class-name (car (split-string
+                             (car (last (split-string file-name "/")))
+                             "\\.")))
+           (root (projectile-project-root)))
+      (mvn-test class-name)))
+
+  ;; prompts for a single test case in the current class and runs it
+
+  (defun java-method-name ()
+    (require 'imenu)
+    (imenu--menubar-select imenu--rescan-item)
+    (save-excursion
+      (let ((beg-pt (progn (beginning-of-defun)
+                            (point)))
+            (end-pt (progn (end-of-defun)
+                           (point))))
+        (car (delq nil
+                   (mapcar (lambda (x) (let ((pos (cdr x)))
+                                         (when (and
+                                                (>= pos beg-pt) (<= pos end-pt))
+                                           (car x))))
+                           (imenu--make-index-alist)))))))
+
+  (defun mvn-test-defun ()
+    (interactive)
+    (require 'imenu)
+    (let* ((file-name (buffer-file-name))
+           (class-name (car (split-string
+                             (car (last (split-string file-name "/")))
+                             "\\.")))
+           (test-case (java-method-name))
+           (root (projectile-project-root))
+           (mvn-cmd (concat "cd " root " && "
+                            "mvn -Dtest=" class-name "#" test-case " test ")))
+      (mvn-test (concat class-name (when test-case (concat "#" test-case)))))))
+
 (use-package groovy-mode
   :ensure t
   :commands groovy-mode
