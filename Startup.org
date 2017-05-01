@@ -15,6 +15,28 @@
   Now I have decided to leverage [[http://orgmode.org/][org-mode]] outline and search capabilities, and
   collapse all the scattered files into a single literate startup file.
 
+* License
+
+  All the code I have in this file is free software. This also goes for the
+  generated =init.el= file.
+
+  #+BEGIN_SRC emacs-lisp
+    ;; Copyright 2017, Ahmet Vedat Hallac
+    ;;
+    ;; This program is free software: you can redistribute it and/or modify
+    ;; it under the terms of the GNU General Public License as published by
+    ;; the Free Software Foundation, either version 3 of the License, or
+    ;; (at your option) any later version.
+    ;;
+    ;; This program is distributed in the hope that it will be useful,
+    ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ;; GNU General Public License for more details.
+    ;;
+    ;; You should have received a copy of the GNU General Public License
+    ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  #+END_SRC
+
 * How to Use this file
 
   This file contains configuration script snippets organized by different type
