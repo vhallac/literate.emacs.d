@@ -1449,6 +1449,30 @@
 
 
      #+END_SRC
+**** Extra Java Packages
+     :PROPERTIES:
+     :header-args: :tangle init.el
+     :END:
+***** flycheck-java
+      A flycheck module that uses eclipse's ecj.jar to check java files.
+
+      This package is not in ELPA yet, so it is loaded as a git submodule. I
+      check whether the submodule is available, then check if ecj.jar is
+      available (I will not commit a binary to git). If both conditions are
+      satisfied, I will initialize the module.
+
+      #+BEGIN_SRC emacs-lisp
+        (let* ((flycheck-java-dir "~/.emacs.d/elisp/thirdparty/flycheck-java")
+               (bin-dir "~/.emacs.d/bin")
+               (ecj-jar-file (when (file-directory-p bin-dir)
+                               (car (last (directory-files  bin-dir t "ecj.*jar"))))))
+          (when (and ecj-jar-file
+                     (file-exists-p flycheck-java-dir))
+            (setq load-path (cons flycheck-java-dir load-path))
+            (use-package flycheck-java
+              :config
+              (setq flycheck-java-ecj-jar-path ecj-jar-file))))
+      #+END_SRC
 *** Maven
     Build your java applications easily.
 

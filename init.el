@@ -452,7 +452,9 @@ into real text."
     :ensure t))
 
 (use-package auto-complete
-  :ensure t)
+  :ensure t
+  :config
+  (setq-default ac-sources (push 'ac-source-yasnippet ac-sources)))
 
 (use-package yasnippet
   :ensure t
@@ -727,6 +729,17 @@ into real text."
   :after projectile
   :config
   (counsel-projectile-on))
+
+(let* ((flycheck-java-dir "~/.emacs.d/elisp/thirdparty/flycheck-java")
+       (bin-dir "~/.emacs.d/bin")
+       (ecj-jar-file (when (file-directory-p bin-dir)
+                       (car (last (directory-files  bin-dir t "ecj.*jar"))))))
+  (when (and ecj-jar-file
+             (file-exists-p flycheck-java-dir))
+    (setq load-path (cons flycheck-java-dir load-path))
+    (use-package flycheck-java
+      :config
+      (setq flycheck-java-ecj-jar-path ecj-jar-file))))
 
 (use-package mvn
   :ensure t
