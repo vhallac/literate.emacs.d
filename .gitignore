@@ -9,3 +9,5 @@
 /projectile-bookmarks.eld
 /recentf
 /bin
+/*.cache
+/tramp
