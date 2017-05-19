@@ -202,6 +202,10 @@
 
 (add-hook 'window-configuration-change-hook 'wg/kludge-gpg-agent)
 
+(use-package tramp-sh
+  :config
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
 (defun overlays-to-text ()
   "Create a new buffer called *text* containing the visible text
 of the current buffer, ie. it converts overlays containing text
@@ -411,7 +415,16 @@ into real text."
 
 (use-package counsel
   :ensure t
-  :bind (("M-g h" . counsel-org-agenda-headlines)))
+  :bind (("M-g h" . counsel-org-agenda-headlines)
+         ("M-g i" . counsel-imenu))
+  :config
+  ;; Assume utf-8 output from my counsel commands
+  (defun vh/coding-system--counsel-cmd (&optional old-function &rest args)
+    (let ((coding-system-for-read 'utf-8-unix))
+      (apply old-function args)))
+
+  ;; Patch counsel-ag only for now. Will extend as more problems show up
+  (advice-add #'counsel-ag :around #'vh/coding-system--counsel-cmd))
 
 (use-package ido-vertical-mode
   :disabled)
@@ -717,7 +730,8 @@ into real text."
   (projectile-register-project-type 'ant '("build.xml") "ant" "ant test")
   (add-to-list 'projectile-project-root-files "build.xml")
   (projectile-register-project-type 'nodejs '("package.json") "npm --no-color build" "npm --no-color test")
-  (add-to-list 'projectile-globally-ignored-directories "node_modules")
+  (mapc (lambda (x) (add-to-list 'projectile-globally-ignored-directories x))
+        (list "node_modules" "target" "bower_components"))
 
   (custom-set-variables '(projectile-project-root-files-functions '(projectile-root-top-down
                                                                     projectile-root-bottom-up
@@ -743,12 +757,14 @@ into real text."
 
 (use-package mvn
   :ensure t
+  :after cc-mode
+  :commands (mvn-test-defun mvntest-class)
   :bind (:map java-mode-map
               ("C-c t c" . mvn-test-class)
               ("C-c t f" . mvn-test-defun))
   :init
   ;; Neither clutter nor color from mvn, please
-  (defun vh/mvn--plain-output (old-function task args &rest future-args)
+  (defun vh/mvn--plain-output (&optional old-function task args &rest future-args)
     (apply old-function task (concat "-q -B " args) future-args))
 
   (advice-add #'mvn :around #'vh/mvn--plain-output)
@@ -800,7 +816,7 @@ into real text."
 
 (use-package ruby-mode
   :commands ruby-mode
-  :requires auto-complete
+  :after auto-complete
   :mode ("\\(?:\\.\\(?:gemspec\\|r\\(?:ake\\|[ub]\\)\\)\\|Gemfile\\)\\$" . ruby-mode)
   :bind (:map ruby-mode-map
               ("C-x C-t" . ruby-compilation-this-rspec)
@@ -810,14 +826,9 @@ into real text."
               ("C-c b" . ruby-flip-containing-block-type))
   :config
   (require 'ruby-helper)
-  ;;(autoload 'ruby-electric-mode "ruby-electric.el")
-  ;;(autoload 'rinari-launch "rinari.el")
-  ;;(autoload 'yari-anything "yari.el")
   (autoload 'word-at-point "thingatpt.el")
 
-  ;;(require 'anything)
   (require 'auto-complete-config)
-  ;;(require 'ruby-compilation-rspec)
 
   (require 'align)
   (defconst align-ruby-modes '(ruby-mode))
@@ -837,12 +848,39 @@ into real text."
     (add-to-list 'align-rules-list it))
 
   (add-hook 'ruby-mode-hook (lambda ()
-                              ;; (rinari-launch)
-                              ;;(ruby-electric-mode t)
                               (auto-complete-mode t)
                               ;; Auto-complete fixups
                               (make-local-variable 'ac-ignores)
-                              (add-to-list 'ac-ignores "end"))))
+                              (add-to-list 'ac-ignores "end")))
+
+  (defun vh/projectile-test-prefix (orig-fun project-type &rest args)
+    (let ((val
+           (or (cond
+                ((member project-type '(ruby)) "test_"))
+               (apply orig-fun project-type args))))
+      (message val)
+      val
+      ))
+  (advice-add 'projectile-test-prefix :around #'vh/projectile-test-prefix))
+
+(use-package inf-ruby
+  :ensure t)
+
+(use-package rake
+  :ensure t
+  :after projectile
+  :config
+  (projectile-register-project-type 'ruby '("Rakefile") "rake" "rake test"))
+
+(use-package rbenv
+  :ensure t
+  :config
+  (let ((path (getenv "PATH")))
+    (when (not (string-match-p "\\.rbenv/shims" path))
+      (setenv "PATH" (concat path path-separator (expand-file-name "~/.rbenv/shims"))))))
+
+(use-package bundler
+  :ensure t)
 
 (use-package rspec-mode
   :disabled
@@ -959,7 +997,6 @@ into real text."
   (setq c-macro-shrink-window-flag t)
   (add-hook 'c-mode-common-hook (lambda ()
                                   (auto-fill-mode t)
-                                  (c-toggle-auto-hungry-state 1)
                                   (auto-complete-mode)))
   (require 'etags)
   
@@ -1753,6 +1790,9 @@ Use a prefix arg to get regular RET. "
 (use-package sdcv-mode
   :defer
   :bind ( ("C-c d" . sdcv-search)))
+
+(use-package wgrep
+  :ensure t)
 
 (let ((local-config-file "~/.emacs-local-config.el"))
   (when (file-exists-p local-config-file)
