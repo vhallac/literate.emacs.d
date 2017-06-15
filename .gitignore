@@ -11,3 +11,4 @@
 /bin
 /*.cache
 /tramp
+/.mc-lists.el
