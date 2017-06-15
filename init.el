@@ -1829,3 +1829,6 @@ Use a prefix arg to get regular RET. "
 (let ((local-config-file "~/.emacs-local-config.el"))
   (when (file-exists-p local-config-file)
     (load-file local-config-file)))
+
+(use-package dockerfile-mode
+  :ensure t)

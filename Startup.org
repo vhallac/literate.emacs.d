@@ -2388,3 +2388,10 @@
        (when (file-exists-p local-config-file)
          (load-file local-config-file)))
    #+END_SRC
+** Docker
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package dockerfile-mode
+       :ensure t)
+   #+END_SRC
+* Final tweaks
