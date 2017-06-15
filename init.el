@@ -551,10 +551,48 @@ into real text."
                         '(mm-inline-large-images t)
                         '(mm-coding-system-priorities '(utf-8))))
 
+(use-package notmuch
+  :ensure t
+  :commands vh/notmuch-show-delete-thread
+  :bind (:map notmuch-show-mode-map
+              ("K" . vh/notmuch-show-delete-thread))
+  :config
+  ;; allow linking to mail from org-mode files
+  (require 'org-notmuch)
+  (setq notmuch-command (expand-file-name "~/bin/remote-notmuch.sh"))
+  (custom-set-variables '(notmuch-saved-searches
+                          (quote
+                           ((:name "inbox.personal" :query "tag:inbox and tag:personal" :key "ip")
+                            (:name "inbox.work" :query "tag:inbox and tag:pia" :key "iw")
+                            (:name "unread.personal" :query "tag:unread and tag:personal" :key "up")
+                            (:name "unread.work" :query "tag:unread and tag:pia" :key "uw")
+                            (:name "flagged" :query "tag:flagged" :key "f")
+                            (:name "sent" :query "tag:sent" :key "t")
+                            (:name "drafts" :query "tag:draft" :key "d")
+                            (:name "all mail" :query "*" :key "a")
+                            (:name "inbox.work" :query "tag:pia and tag:inbox"))))
+                        '(notmuch-archive-tags '("-inbox" "+archived")))
+  ;; Mark deleted messages unread for fast delete
+  (setcar (cdr (assoc "d" notmuch-tagging-keys)) '("+deleted" "-inbox" "-unread"))
+  (push '("lf" ("+financial" "-inbox") "Financial") notmuch-tagging-keys)
+  (push '("ls" ("+siam" "-inbox") "SIAM") notmuch-tagging-keys)
+  (push '("lb" ("+boun" "-inbox") "Boğ. Üni.") notmuch-tagging-keys)
+  (push '("lk" ("+kurumsal" "+prm" "+project" "-inbox") "Kurumsal PRM") notmuch-tagging-keys)
+  (push '("lp" ("+project" "-inbox") "Project") notmuch-tagging-keys)
+  (push '("lP" ("+prospect" "-inbox") "Project") notmuch-tagging-keys)
+  (push '("lln" ("+notice" "-inbox") "Notice") notmuch-tagging-keys)
+  (push '("llm" ("+misc" "-inbox") "Misc") notmuch-tagging-keys)
+  (push '("lla" ("+announcement" "-inbox") "Announcement") notmuch-tagging-keys)
+  (defun vh/notmuch-show-delete-thread ()
+    (interactive "")
+    (let ((notmuch-archive-tags '("-inbox" "+deleted")))
+      (notmuch-show-archive-thread-then-exit))))
+
 (use-package message
   :bind (:map message-mode-map
               ("C-c o" . vh/message-edit-body-as-org)
-              ("C-c h" . vh/message-org-to-html))
+              ("C-c h" . vh/message-org-to-html)
+              ("C-c s" . vh/insert-pia-html-sig))
   :defer
   :config
   (custom-set-variables '(message-alternative-emails (regexp-opt '("vedathallac@gmail.com"
