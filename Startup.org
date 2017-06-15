@@ -2375,8 +2375,6 @@
      (use-package wgrep
        :ensure t)
    #+END_SRC
-* Final tweaks
-
 ** Per machine setup
 
    I may need to tweak some variables on individual machines, or leave some
