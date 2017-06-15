@@ -171,12 +171,7 @@
 (setq line-number-mode t
       column-number-mode t)
 
-(set-default-coding-systems 'utf-8)
-(setq current-language-environment "Latin-1"
-      default-input-method "latin-1-prefix")
-
-(require 'turkish-doubles)
-(set-language-environment "Turkish")
+(set-language-environment 'utf-8)
 
 (add-hook 'after-make-frame-functions (lambda (frame)
                                         (when (window-system frame)

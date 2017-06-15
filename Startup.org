@@ -326,13 +326,11 @@
 ** L10N & I18N
 
    #+BEGIN_SRC emacs-lisp
-     (set-default-coding-systems 'utf-8)
-     (setq current-language-environment "Latin-1"
-           default-input-method "latin-1-prefix")
+     (set-language-environment 'utf-8)
    #+END_SRC
 
-   For turkish input, use my weird input method:
-   #+BEGIN_SRC emacs-lisp
+   I used to use use my weird input method for Turkish character input. Now I rely on xkb, so ~:tangle no~.
+   #+BEGIN_SRC emacs-lisp :tangle no
      (require 'turkish-doubles)
      (set-language-environment "Turkish")
    #+END_SRC
