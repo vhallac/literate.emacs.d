@@ -770,7 +770,8 @@ into real text."
 
   (custom-set-variables '(projectile-project-root-files-functions '(projectile-root-top-down
                                                                     projectile-root-bottom-up
-                                                                    projectile-root-top-down-recurring)))
+                                                                    projectile-root-top-down-recurring))
+                        '(projectile-enable-caching t))
   (projectile-global-mode))
 
 (use-package counsel-projectile
