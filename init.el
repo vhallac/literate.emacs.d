@@ -891,7 +891,6 @@ into real text."
            (or (cond
                 ((member project-type '(ruby)) "test_"))
                (apply orig-fun project-type args))))
-      (message val)
       val
       ))
   (advice-add 'projectile-test-prefix :around #'vh/projectile-test-prefix))
