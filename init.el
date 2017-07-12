@@ -1466,10 +1466,6 @@ immediately after current heading."
                                        ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
                                        ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))
         org-treat-S-cursor-todo-selection-as-state-change nil
-        ;; Targets include this file and any file contributing to the agenda -
-        ;; up to 5 levels deep
-        org-refile-targets '((org-agenda-files :maxlevel . 5)
-                             (nil :maxlevel . 5))
         ;; Targets start with the file name - allows creating level 1 tasks
         ;; !!!!!!!!!!!!!!!!!!! REMOVED. It doesn't work well with ivy/org
         ;;;;; org-refile-use-outline-path 'file
@@ -1486,7 +1482,8 @@ immediately after current heading."
         ;; Mark a task as DONE when archiving
         org-archive-mark-done nil
         org-src-fontify-natively t
-        org-time-clocksum-use-effort-durations t)
+        org-time-clocksum-use-effort-durations t
+        org-M-RET-may-split-line '((default . nil)))
   (unbind-key "C-c ;" org-mode-map)
   (unbind-key "C-c C-x C-s" org-mode-map)
   (add-to-list 'org-modules 'org-habit)
@@ -1727,23 +1724,23 @@ immediately after current heading."
   :config
   (setq org-default-notes-file "~/org/refile.org"
         org-capture-templates  '(("w" "Web" entry
-                                  (file+headline "~/org/home.org" "Firefox")
-                                  "* TODO %c\n\n%i" :immediate-finish t)
+                                  (file "~/org/inbox.org")
+                                  "* %c :BOOKMARK:\n\n%i" :immediate-finish t)
                                  ("t" "TODO" entry
-                                  (file+headline "~/org/refile.org" "Tasks")
+                                  (file+headline "~/org/inbox.org" "Incoming")
                                   "* TODO %?\n  :PROPERTIES:\n  :CREATED: %U\n  :LINK: %a\n  :END:\n %i"
                                   :clock-in t :clock-resume t)
                                  ("n" "note" entry
-                                  (file+headline "~/org/refile.org" "Notes")
+                                  (file "~/org/inbox.org")
                                   "* %? :NOTE:\n  %U\n  %a\n"
                                   :clock-in t :clock-resume t)
                                  ("r" "research" entry
-                                  (file+headline "~/org/work.org" "Research")
+                                  (file "~/org/inbox.org")
                                   "* %? :RESEARCH:\n  %U\n  %x\n")
                                  ("q" "Quick note" item
                                   (file+headline "~/org/review.org" "Quick notes"))
                                  ("s" "Schedule" entry
-                                  (file+headline "~/org/refile.org" "Quick Schedule")
+                                  (file "~/org/inbox.org")
                                   "* TODO %?\n  SCHEDULED: %t\n  %i")
                                  ("c" "Quick note on clocked task" item
                                   (clock)))))
@@ -1789,58 +1786,6 @@ immediately after current heading."
 (use-package org-mobile
   :commands (org-mobile-push org-mobile-pull)
   :config (setq org-mobile-directory "~/outgoing/mobileorg"))
-
-(require 'org-inlinetask)
-
-(defun scimax/org-return (&optional ignore)
-  "Add new list item, heading or table row with RET.
-A double return on an empty element deletes it.
-Use a prefix arg to get regular RET. "
-  (interactive "P")
-  (if ignore
-      (org-return)
-    (cond
-     ;; Open links like usual
-     ((eq 'link (car (org-element-context)))
-      (org-open-at-point-global))
-     ;; It doesn't make sense to add headings in inline tasks. Thanks Anders
-     ;; Johansson!
-     ((org-inlinetask-in-task-p)
-      (org-return))
-     ;; add checkboxes
-     ((org-at-item-checkbox-p)
-      (org-insert-todo-heading nil))
-     ;; lists end with two blank lines, so we need to make sure we are also not
-     ;; at the beginning of a line to avoid a loop where a new entry gets
-     ;; created with only one blank line.
-     ((and (org-in-item-p) (not (bolp)))
-      (if (org-element-property :contents-begin (org-element-context))
-          (org-insert-heading)
-        (beginning-of-line)
-        (setf (buffer-substring
-               (line-beginning-position) (line-end-position)) "")
-        (org-return)))
-     ((org-at-heading-p)
-      (if (not (string= "" (org-element-property :title (org-element-context))))
-          (progn (org-end-of-meta-data)
-                 (org-insert-heading))
-        (beginning-of-line)
-        (setf (buffer-substring
-               (line-beginning-position) (line-end-position)) "")))
-     ((org-at-table-p)
-      (if (-any?
-           (lambda (x) (not (string= "" x)))
-           (nth
-            (- (org-table-current-dline) 1)
-            (org-table-to-lisp)))
-          (org-return)
-        ;; empty row
-        (beginning-of-line)
-        (setf (buffer-substring
-               (line-beginning-position) (line-end-position)) "")
-        (org-return)))
-     (t
-      (org-return)))))
 
 (use-package quantified
   :disabled

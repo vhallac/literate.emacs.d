@@ -2021,10 +2021,6 @@
                                             ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
                                             ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))
              org-treat-S-cursor-todo-selection-as-state-change nil
-             ;; Targets include this file and any file contributing to the agenda -
-             ;; up to 5 levels deep
-             org-refile-targets '((org-agenda-files :maxlevel . 5)
-                                  (nil :maxlevel . 5))
              ;; Targets start with the file name - allows creating level 1 tasks
              ;; !!!!!!!!!!!!!!!!!!! REMOVED. It doesn't work well with ivy/org
              ;;;;; org-refile-use-outline-path 'file
@@ -2041,7 +2037,8 @@
              ;; Mark a task as DONE when archiving
              org-archive-mark-done nil
              org-src-fontify-natively t
-             org-time-clocksum-use-effort-durations t)
+             org-time-clocksum-use-effort-durations t
+             org-M-RET-may-split-line '((default . nil)))
        (unbind-key "C-c ;" org-mode-map)
        (unbind-key "C-c C-x C-s" org-mode-map)
        (add-to-list 'org-modules 'org-habit)
@@ -2232,23 +2229,23 @@
        :config
        (setq org-default-notes-file "~/org/refile.org"
              org-capture-templates  '(("w" "Web" entry
-                                       (file+headline "~/org/home.org" "Firefox")
-                                       "* TODO %c\n\n%i" :immediate-finish t)
+                                       (file "~/org/inbox.org")
+                                       "* %c :BOOKMARK:\n\n%i" :immediate-finish t)
                                       ("t" "TODO" entry
-                                       (file+headline "~/org/refile.org" "Tasks")
+                                       (file+headline "~/org/inbox.org" "Incoming")
                                        "* TODO %?\n  :PROPERTIES:\n  :CREATED: %U\n  :LINK: %a\n  :END:\n %i"
                                        :clock-in t :clock-resume t)
                                       ("n" "note" entry
-                                       (file+headline "~/org/refile.org" "Notes")
+                                       (file "~/org/inbox.org")
                                        "* %? :NOTE:\n  %U\n  %a\n"
                                        :clock-in t :clock-resume t)
                                       ("r" "research" entry
-                                       (file+headline "~/org/work.org" "Research")
+                                       (file "~/org/inbox.org")
                                        "* %? :RESEARCH:\n  %U\n  %x\n")
                                       ("q" "Quick note" item
                                        (file+headline "~/org/review.org" "Quick notes"))
                                       ("s" "Schedule" entry
-                                       (file+headline "~/org/refile.org" "Quick Schedule")
+                                       (file "~/org/inbox.org")
                                        "* TODO %?\n  SCHEDULED: %t\n  %i")
                                       ("c" "Quick note on clocked task" item
                                        (clock)))))
@@ -2297,7 +2294,8 @@
 
 
    #+END_SRC
-*** Better return key for org-mode
+*** DISABLED Better return key for org-mode
+    CLOSED: [2017-06-24 Sat 10:09]
 
     This implements what is essentially a return-dwim to make sure I don't worry
     about different types of return key for different types of outcomes. This is
@@ -2308,7 +2306,7 @@
     Blog post talking about the code below: [[http://irreal.org/blog/?p=6131][A Better RETURN for Org]] (Irreal)
 
     #+name: org-support-funcs
-    #+BEGIN_SRC emacs-lisp
+    #+BEGIN_SRC emacs-lisp :tangle no
       (require 'org-inlinetask)
 
       (defun scimax/org-return (&optional ignore)
