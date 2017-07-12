@@ -292,7 +292,7 @@ into real text."
   (defun vh-find-escreen-data-by-number (number)
     (car (delq nil
                (mapcar (lambda (x) (and (= (car x) number) x))
-                       escreen-configuration-alist))))
+                       (escreen-configuration-alist)))))
   
   (defun vh-escreen-buffer-name (number)
     "Extract the buffer name for the given screen number"
@@ -312,7 +312,7 @@ into real text."
         (setq screen-msg
               (concat screen-msg
                       (let ((display-str (concat (number-to-string s) ":" (vh-escreen-buffer-name s))))
-                        (if (= escreen-current-screen-number s)
+                        (if (= (escreen-current-screen-number) s)
                             (propertize display-str 'face 'bold-italic)
                           display-str))
                       " ")))
@@ -762,9 +762,13 @@ into real text."
 (use-package projectile
   :ensure t
   :config
-  (projectile-register-project-type 'ant '("build.xml") "ant" "ant test")
+  (projectile-register-project-type 'ant '("build.xml")
+                                    :compile "ant"
+                                    :test "ant test")
   (add-to-list 'projectile-project-root-files "build.xml")
-  (projectile-register-project-type 'nodejs '("package.json") "npm --no-color build" "npm --no-color test")
+  (projectile-register-project-type 'nodejs '("package.json")
+                                    :compile "npm --no-color build"
+                                    :test "npm --no-color test")
   (mapc (lambda (x) (add-to-list 'projectile-globally-ignored-directories x))
         (list "node_modules" "target" "bower_components"))
 
@@ -905,7 +909,9 @@ into real text."
   :ensure t
   :after projectile
   :config
-  (projectile-register-project-type 'ruby '("Rakefile") "rake" "rake test"))
+  (projectile-register-project-type 'ruby '("Rakefile")
+                                    :compile "rake"
+                                    :test "rake test"))
 
 (use-package rbenv
   :ensure t
