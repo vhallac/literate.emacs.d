@@ -554,8 +554,18 @@ into real text."
 (use-package notmuch
   :ensure t
   :commands vh/notmuch-show-delete-thread
-  :bind (:map notmuch-show-mode-map
-              ("K" . vh/notmuch-show-delete-thread))
+  :bind (("C-c n" . vh/hydra-notmuch-global/body)
+         :map notmuch-show-mode-map
+         ("K" . vh/notmuch-show-delete-thread))
+  :after hydra
+  :init
+  (defhydra vh/hydra-notmuch-global (:color blue)
+    "Notmuch menu"
+    ("n" (notmuch) "Landing Page")
+    ("m" (notmuch-mua-new-mail) "Compose mail")
+    ("s" (notmuch-search) "Search mail")
+    ("z" (notmuch-tree) "Search Mail (tree view)")
+    ("j" (notmuch-jump-search) "Search with saved queries "))
   :config
   ;; allow linking to mail from org-mode files
   (require 'org-notmuch)
@@ -567,26 +577,36 @@ into real text."
                             (:name "unread.personal" :query "tag:unread and tag:personal" :key "up")
                             (:name "unread.work" :query "tag:unread and tag:pia" :key "uw")
                             (:name "flagged" :query "tag:flagged" :key "f")
+                            (:name "flagged-tree" :search-type tree :query "tag:flagged" :key "F")
                             (:name "sent" :query "tag:sent" :key "t")
-                            (:name "drafts" :query "tag:draft" :key "d")
+                            (:name "drafts" :query "tag:draft" :key "dr")
+                            (:name "today" :query "date:today" :key "dt")
+                            (:name "last week" :query "date:\"this week\"" :key "dw")
+                            (:name "last week" :query "date:\"this month\"" :key "dm")
                             (:name "all mail" :query "*" :key "a")
-                            (:name "inbox.work" :query "tag:pia and tag:inbox"))))
-                        '(notmuch-archive-tags '("-inbox" "+archived")))
-  ;; Mark deleted messages unread for fast delete
-  (setcar (cdr (assoc "d" notmuch-tagging-keys)) '("+deleted" "-inbox" "-unread"))
+                            (:name "info" :query "tag:info" "i"))))
+                        '(notmuch-archive-tags '("-inbox" "+archived"))
+                        '(notmuch-always-prompt-for-sender t)
+                        '(notmuch-identities (quote
+                                              ("Vedat Hallaç <vedat.hallac@pia-team.com>"
+                                               "Vedat Hallaç <vedat@hallac.net>"))))
+                        ;; Mark deleted messages unread for fast delete
+                        (setcar (cdr (assoc "d" notmuch-tagging-keys)) '("+deleted" "-inbox" "-unread"))
   (push '("lf" ("+financial" "-inbox") "Financial") notmuch-tagging-keys)
   (push '("ls" ("+siam" "-inbox") "SIAM") notmuch-tagging-keys)
   (push '("lb" ("+boun" "-inbox") "Boğ. Üni.") notmuch-tagging-keys)
   (push '("lk" ("+kurumsal" "+prm" "+project" "-inbox") "Kurumsal PRM") notmuch-tagging-keys)
   (push '("lp" ("+project" "-inbox") "Project") notmuch-tagging-keys)
   (push '("lP" ("+prospect" "-inbox") "Project") notmuch-tagging-keys)
+  (push '("li" ("+info" "-inbox") "info") notmuch-tagging-keys)
   (push '("lln" ("+notice" "-inbox") "Notice") notmuch-tagging-keys)
   (push '("llm" ("+misc" "-inbox") "Misc") notmuch-tagging-keys)
   (push '("lla" ("+announcement" "-inbox") "Announcement") notmuch-tagging-keys)
   (defun vh/notmuch-show-delete-thread ()
     (interactive "")
     (let ((notmuch-archive-tags '("-inbox" "+deleted")))
-      (notmuch-show-archive-thread-then-exit))))
+      (notmuch-show-archive-thread-then-exit)))
+   )
 
 (use-package message
   :bind (:map message-mode-map
@@ -631,20 +651,23 @@ into real text."
       (remove-hook 'org-ctrl-c-ctrl-c-final-hook 'vh/message-back-to-message)
       t))
   
-  (defun vh/message-org-to-html ()
-    (interactive)
+  (defun vh/message-org-to-html (arg)
+    (interactive "P")
     (message-goto-body)
     (save-restriction
       (narrow-to-region (point) (point-max))
-      (let ((text (org-export-as 'html)))
+      (let* ((org-html-postamble (if arg nil
+                                   vh/pia-html-sig))
+             (text (org-export-as 'html)))
         (kill-region (point-min) (point-max))
+        (mml-generate-mime "related")
         (mml-insert-multipart "alternative")
+        (mml-insert-part "text/plain")
+        (yank)
         (mml-insert-part "text/html")
         (insert (concat text "\n")))))
-  (defun vh/insert-pia-html-sig ()
-    (interactive)
-    (insert-string
-     (base64-decode-string
+  (defconst vh/pia-html-sig
+    (base64-decode-string
       ;; Abusing base64 to avoid escaping the quotes.
       (concat
        "PGRpdiBzdHlsZT0icGFkZGluZy10b3A6N3B4O2ZvbnQtZmFtaWx5OidWZXJkYW5hJywnc2Fucy1z"
@@ -659,7 +682,11 @@ into real text."
        "PC9hPjwvc3Bhbj48YnIvPjxiPlRla25vcGFyayAmIzMwNDtzdGFuYnVsPC9iPjxici8+U2FiaWhh"
        "IEcmIzI0NjtrJiMyMzE7ZW4gVWx1c2xhcmFyYXMmIzMwNTsgSGF2YWxpbWFuJiMzMDU7LCA1LkJs"
        "b2sgWmVtaW4gS2F0IFoxOUEgUGVuZGlrLSYjMzA0O3N0YW5idWw8YnIvPlQ6ICs5MCAyMTYgMjkw"
-       "IDM1IDU2PGJyLz48L3A+PC9kaXY+"))))
+       "IDM1IDU2PGJyLz48L3A+PC9kaXY+")))
+  
+  (defun vh/insert-pia-html-sig ()
+    (interactive)
+    (insert-string vh/pia-html-sig))
 
   (require 'smtpmail)
   (when (require 'bbdb nil t)
@@ -1380,6 +1407,22 @@ into real text."
          :map org-mode-map
          ("RET" . scimax/org-return))
   :defer
+  :init
+  (defun vh/revert-org-insert-heading-arg-behavior (&optional old-function arg
+                                                              invisible-ok top &rest future-args)
+    "Revert behavior of M-RET.
+
+When arg is not provided, respect content; when it is 4, insert heading
+immediately after current heading."
+    (message (if (not  arg) "nil"))
+    (let ((arg (cond ((equal arg '(4)) nil)
+                     ((not arg) '(4))
+                     (t nil))))
+      (message "coo")
+      (message (if (not  arg) "nil"))
+      (apply old-function arg invisible-ok top future-args)))
+
+  (advice-add #'org-insert-heading :around #'vh/revert-org-insert-heading-arg-behavior)
   :config
   (setq org-enforce-todo-checkbox-dependencies t
         org-enforce-todo-dependencies t
