@@ -606,7 +606,25 @@ into real text."
     (interactive "")
     (let ((notmuch-archive-tags '("-inbox" "+deleted")))
       (notmuch-show-archive-thread-then-exit)))
-   )
+  (defun vh/notmuch-address-selection-function (prompt collection initial-input)
+    (let* ((from (or  (message-fetch-field "From" "")))
+           (mail-addr (first
+                       (delq nil (mapcar
+                                  (lambda (x) (when  (string-match "@" x) x))
+                                  (split-string from "[<>]")))))
+           (domain (when mail-addr
+                     (second (split-string mail-addr "@"))))
+           (exists (and (delq nil (mapcar
+                                   (lambda (x)  (string-match domain x))
+                                   collection))
+                        t)))
+      ;; I am doing something nasty - orig is the string we search for
+      (notmuch-address-selection-function prompt collection
+                                          (or
+                                           (and exists domain)
+                                           orig))))
+
+  (setq notmuch-address-selection-function #'vh/notmuch-address-selection-function))
 
 (use-package message
   :bind (:map message-mode-map
