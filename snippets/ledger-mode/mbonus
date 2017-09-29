@@ -2,5 +2,5 @@
 # name: mbonus
 # key: mbonus
 # --
-Assets:CC:Migros                              ${1:_.01} TL
+Assets:CC:Migros                              ${1:0.01} TL
 Income:Garanti:Bonus                         -$1 TL
