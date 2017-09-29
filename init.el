@@ -201,6 +201,9 @@
   :config
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
+(use-package eshell
+  :bind ("C-c s" . eshell))
+
 (defun overlays-to-text ()
   "Create a new buffer called *text* containing the visible text
 of the current buffer, ie. it converts overlays containing text

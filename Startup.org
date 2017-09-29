@@ -384,6 +384,13 @@
   #+END_SRC
 
 * Misc Functions
+
+** Eshell
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package eshell
+       :bind ("C-c s" . eshell))
+   #+END_SRC
 * Overlays to text
   Sometimes I want to copy the output of my org column view. The script below
   will allow you to turn the overlays into plain text, allowing you to save or
