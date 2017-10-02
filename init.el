@@ -578,7 +578,8 @@ into real text."
                            ((:name "inbox.personal" :query "tag:inbox and tag:personal" :key "ip")
                             (:name "inbox.work" :query "tag:inbox and tag:pia" :key "iw")
                             (:name "unread.personal" :query "tag:unread and tag:personal" :key "up")
-                            (:name "unread.work" :query "tag:unread and tag:pia" :key "uw")
+                            (:name "unread.work.pia" :query "tag:unread and tag:pia" :key "uw")
+                            (:name "unread.work.lidyum" :query "tag:unread and tag:lidyum" :key "ul")
                             (:name "flagged" :query "tag:flagged" :key "f")
                             (:name "flagged-tree" :search-type tree :query "tag:flagged" :key "F")
                             (:name "sent" :query "tag:sent" :key "t")
@@ -690,20 +691,19 @@ into real text."
   (defconst vh/pia-html-sig
     (base64-decode-string
       ;; Abusing base64 to avoid escaping the quotes.
-      (concat
-       "PGRpdiBzdHlsZT0icGFkZGluZy10b3A6N3B4O2ZvbnQtZmFtaWx5OidWZXJkYW5hJywnc2Fucy1z"
-       "ZXJpZic7Zm9udC1zaXplOjhwdCI+PGEgaHJlZj0iaHR0cDovL3d3dy5waWEtdGVhbS5jb20vIiB0"
-       "YXJnZXQ9Il9ibGFuayI+PGltZyBzcmM9Imh0dHA6Ly93d3cucGlhLXRlYW0uY29tL2ltYWdlcy9s"
-       "b2dvLWJsYWNrLnBuZyIgaGVpZ2h0PSI3MiIgd2lkdGg9IjE2MCIvPjwvYT48aHIgd2lkdGg9IjE2"
-       "MCIgYWxpZ249ImxlZnQiLz48cCBhbGlnbj0ibGVmdCI+PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTo5"
-       "cHQiIGxhbmc9IkVOLVVTIj48Yj5BaG1ldCBWZWRhdCBIYWxsYSYjMjMxOzwvYj48L3NwYW4+PGJy"
-       "Lz5IZWFkIG9mIERldmVsb3BtZW50IERlcGFydG1lbnQ8YnIvPjxici8+TTogKzkwIDU0MSA4MzMg"
-       "MjggODI8YnIvPjxzcGFuIHN0eWxlPSJjb2xvcjojMDA2OGNmOyI+PGEgaHJlZj0ibWFpbHRvOnZl"
-       "ZGF0LmhhbGxhY0BwaWEtdGVhbS5jb20iPjx1PnZlZGF0LmhhbGxhY0BwaWEtdGVhbS5jb208L3U+"
-       "PC9hPjwvc3Bhbj48YnIvPjxiPlRla25vcGFyayAmIzMwNDtzdGFuYnVsPC9iPjxici8+U2FiaWhh"
-       "IEcmIzI0NjtrJiMyMzE7ZW4gVWx1c2xhcmFyYXMmIzMwNTsgSGF2YWxpbWFuJiMzMDU7LCA1LkJs"
-       "b2sgWmVtaW4gS2F0IFoxOUEgUGVuZGlrLSYjMzA0O3N0YW5idWw8YnIvPlQ6ICs5MCAyMTYgMjkw"
-       "IDM1IDU2PGJyLz48L3A+PC9kaXY+")))
+      (concat "PGRpdiBzdHlsZT0icGFkZGluZy10b3A6N3B4O2ZvbnQtZmFtaWx5OidWZXJkYW5hJywnc2Fucy1z"
+              "ZXJpZic7Zm9udC1zaXplOjhwdCI+PGEgaHJlZj0iaHR0cDovL3d3dy5waWEtdGVhbS5jb20vIiB0"
+              "YXJnZXQ9Il9ibGFuayI+PGltZyBzcmM9Imh0dHA6Ly93d3cucGlhLXRlYW0uY29tL2ltYWdlcy9s"
+              "b2dvLWJsYWNrLnBuZyIgaGVpZ2h0PSI3MiIgd2lkdGg9IjE2MCIvPjwvYT48aHIgd2lkdGg9IjE2"
+              "MCIgYWxpZ249ImxlZnQiLz48cCBhbGlnbj0ibGVmdCI+PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTo5"
+              "cHQiIGxhbmc9IkVOLVVTIj48Yj5BaG1ldCBWZWRhdCBIYWxsYSYjMjMxOzwvYj48L3NwYW4+PGJy"
+              "Lz5IZWFkIG9mIERldmVsb3BtZW50IERlcGFydG1lbnQ8YnIvPjxici8+TTogKzkwIDU0MSA4MzMg"
+              "MjggODI8YnIvPjxzcGFuIHN0eWxlPSJjb2xvcjojMDA2OGNmOyI+PGEgaHJlZj0ibWFpbHRvOnZl"
+              "ZGF0LmhhbGxhY0BwaWEtdGVhbS5jb20iPjx1PnZlZGF0LmhhbGxhY0BwaWEtdGVhbS5jb208L3U+"
+              "PC9hPjwvc3Bhbj48YnIvPjxiPlRla25vcGFyayAmIzMwNDtzdGFuYnVsIFNhbmF5aSBNYWguPC9i"
+              "Pjxici8+VGVrbm9wYXJrIEJ1bHZhciYjMzA1OyAxLzFDIDE2MDEtMTYwMjxici8+MzQ5MDYgS3Vy"
+              "dGsmIzI0Njt5IC8gJiMzMDQ7c3RhbmJ1bDxici8+VGVsL0ZheDogKzkwIDIxNiAyOTAgMzUgNTY8"
+              "L3A+PC9kaXY+Cg==")))
   
   (defun vh/insert-pia-html-sig ()
     (interactive)
