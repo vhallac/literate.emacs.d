@@ -253,7 +253,7 @@ into real text."
                              ;; keep these buffers untouched
                              '(clean-buffer-list-kill-never-buffer-names '("*Messages*" "*cmd*" "*scratch*"
                                                                            "*w3m*" "*w3m-cache*"
-                                                                           "*Group*"))
+                                                                           "*Group*" "*eshell*"))
                              '(clean-buffer-list-kill-never-regexps '("^\\*EMMS Playlist\\*.*$"
                                                                       "^\\*Article "
                                                                       "^\\*Summary "
