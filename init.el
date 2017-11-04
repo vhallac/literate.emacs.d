@@ -202,7 +202,25 @@
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
 (use-package eshell
-  :bind ("C-c s" . eshell))
+  :bind ("C-c s" . eshell)
+  :config
+  (defvar zakame/ansi-escapes-re
+    (rx (or ?\233 (and ?\e ?\[))
+        (zero-or-more (char (?0 . ?\?)))
+        (zero-or-more (char ?\s ?- ?\/))
+        (char (?@ .?~))))
+  (defun zakame/nuke-ansi-escapes (beg end)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward zakame/ansi-escapes-re end t)
+        (replace-match ""))))
+  (defun zakame/eshell-nuke-ansi-escapes ()
+    (zakame/nuke-ansi-escapes eshell-last-output-start eshell-last-output-end))
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (add-to-list 'eshell-output-filter-functions
+                           'zakame/eshell-nuke-ansi-escapes t))
+            ))
 
 (defun overlays-to-text ()
   "Create a new buffer called *text* containing the visible text
