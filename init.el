@@ -1531,7 +1531,7 @@ immediately after current heading."
         org-agenda-span 'day
 
         org-agenda-include-all-todo t
-        org-agenda-time-grid '((daily today) "----------------" (800 1000 1200 1400 1600 1800 2000))
+        org-agenda-time-grid '((daily today) (800 1000 1200 1400 1600 1800 2000) "......" "----------------")
 
         ;; Agenda log mode items to display (clock time only by default)
         org-agenda-log-mode-items '(clock)
